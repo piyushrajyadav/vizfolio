@@ -40,6 +40,12 @@ export interface Profile {
   role: string
   bio: string
   avatar_url: string
+  tagline?: string
+  website?: string
+  github?: string
+  linkedin?: string
+  twitter?: string
+  instagram?: string
   social_links: {
     github?: string
     linkedin?: string
@@ -48,6 +54,9 @@ export interface Profile {
     youtube?: string
     website?: string
   }
+  subscription_plan: 'free' | 'pro' | 'enterprise'
+  subscription_status: 'active' | 'cancelled' | 'expired'
+  subscription_ends_at?: string
   theme_selected: string
   username: string
   created_at: string
@@ -71,6 +80,7 @@ export interface Skill {
   id: string
   user_id: string
   skill_name: string
+  name: string
   level: 'beginner' | 'intermediate' | 'expert'
   created_at: string
 }
@@ -85,10 +95,10 @@ export async function getProfile(userId: string) {
   return { data, error }
 }
 
-export async function updateProfile(userId: string, profile: Partial<Profile>) {
+export async function updateProfile(userId: string, updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at'>>) {
   const { data, error } = await supabase
     .from('profiles')
-    .update(profile)
+    .update(updates)
     .eq('id', userId)
     .select()
     .single()
@@ -160,6 +170,16 @@ export async function createSkill(skill: Omit<Skill, 'id' | 'created_at'>) {
   return { data, error }
 }
 
+export async function updateSkill(id: string, skill: Partial<Skill>) {
+  const { data, error } = await supabase
+    .from('skills')
+    .update(skill)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data, error }
+}
+
 export async function deleteSkill(id: string) {
   const { error } = await supabase
     .from('skills')
@@ -168,12 +188,42 @@ export async function deleteSkill(id: string) {
   return { error }
 }
 
+// Alias functions for better naming
+export const addProject = createProject
+export const addSkill = createSkill
+
+// Upload avatar function
+export async function uploadAvatar(file: File, userId: string) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${userId}-${Date.now()}.${fileExt}`
+  const filePath = `avatars/${fileName}`
+  
+  const { data, error } = await uploadFile(file, 'avatars', filePath)
+  
+  if (error) return { data: null, error }
+  
+  const publicUrl = getPublicUrl('avatars', filePath)
+  return { data: publicUrl, error: null }
+}
+
 // File upload function
 export async function uploadFile(file: File, bucket: string, path: string) {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file)
-  return { data, error }
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file)
+    return { data, error }
+  } catch (error) {
+    const err = error as Error & { message?: string; status?: number };
+    console.error('Storage upload error:', error)
+    return { 
+      data: null, 
+      error: { 
+        message: err.message || 'Storage upload failed',
+        status: err.status || 500
+      } 
+    }
+  }
 }
 
 // Get public URL for uploaded files

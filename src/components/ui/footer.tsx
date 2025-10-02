@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
 import type { ComponentProps, ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { Grid2x2PlusIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import { FacebookIcon, Grid2x2PlusIcon, InstagramIcon, LinkedinIcon, YoutubeIcon, TwitterIcon, GithubIcon } from 'lucide-react';
 
 interface FooterLink {
 	title: string;
@@ -19,17 +19,17 @@ const footerLinks: FooterSection[] = [
 	{
 		label: 'Product',
 		links: [
-			{ title: 'Features', href: '#features' },
-			{ title: 'Themes', href: '#themes' },
-			{ title: 'Templates', href: '#templates' },
-			{ title: 'Pricing', href: '#pricing' },
+			{ title: 'Features', href: '/#features' },
+			{ title: 'Themes', href: '/#themes' },
+			{ title: 'Examples', href: '/examples' },
+			{ title: 'Pricing', href: '/pricing' },
 		],
 	},
 	{
 		label: 'Company',
 		links: [
-			{ title: 'About Us', href: '/about' },
-			{ title: 'Blog', href: '/blog' },
+			{ title: 'About Us', href: '/#about' },
+			{ title: 'Contact', href: '/contact' },
 			{ title: 'Privacy Policy', href: '/privacy' },
 			{ title: 'Terms of Service', href: '/terms' },
 		],
@@ -38,18 +38,18 @@ const footerLinks: FooterSection[] = [
 		label: 'Resources',
 		links: [
 			{ title: 'Help Center', href: '/help' },
-			{ title: 'Portfolio Examples', href: '/examples' },
+			{ title: 'Portfolio Guide', href: '/guide' },
 			{ title: 'Design Tips', href: '/tips' },
-			{ title: 'Community', href: '/community' },
+			{ title: 'Blog', href: '/blog' },
 		],
 	},
 	{
-		label: 'Connect',
+		label: 'Social Links',
 		links: [
-			{ title: 'Twitter', href: '#', icon: () => <span className="text-lg">𝕏</span> },
-			{ title: 'LinkedIn', href: '#', icon: LinkedinIcon },
-			{ title: 'Instagram', href: '#', icon: InstagramIcon },
-			{ title: 'YouTube', href: '#', icon: YoutubeIcon },
+			{ title: 'Twitter', href: 'https://twitter.com/vizfolio', icon: TwitterIcon },
+			{ title: 'LinkedIn', href: 'https://linkedin.com/company/vizfolio', icon: LinkedinIcon },
+			{ title: 'GitHub', href: 'https://github.com/vizfolio', icon: GithubIcon },
+			{ title: 'Instagram', href: 'https://instagram.com/vizfolio', icon: InstagramIcon },
 		],
 	},
 ];
@@ -63,27 +63,29 @@ export function Footer() {
 				<AnimatedContainer className="space-y-4">
 					<div className="flex items-center gap-2">
 						<Grid2x2PlusIcon className="size-8" />
-						<span className="text-2xl font-bold">Vizfolio</span>
+						<span className="text-xl font-bold">Vizfolio</span>
 					</div>
-					<p className="text-muted-foreground text-sm max-w-md">
-						Create stunning portfolios that showcase your work and help you land your dream opportunities.
+					<p className="text-muted-foreground text-sm max-w-sm">
+						Create stunning portfolios with multiple themes. Perfect for freelancers, students, and professionals.
 					</p>
 					<p className="text-muted-foreground mt-8 text-sm md:mt-4">
 						© {new Date().getFullYear()} Vizfolio. All rights reserved.
 					</p>
 				</AnimatedContainer>
 
-				<div className="mt-10 grid grid-cols-2 gap-8 md:grid-cols-3 xl:col-span-2 xl:mt-0">
+				<div className="mt-10 grid grid-cols-2 gap-8 md:grid-cols-4 xl:col-span-2 xl:mt-0">
 					{footerLinks.map((section, index) => (
 						<AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
 							<div className="mb-10 md:mb-0">
-								<h3 className="text-sm font-semibold mb-4">{section.label}</h3>
-								<ul className="text-muted-foreground space-y-3 text-sm">
+								<h3 className="text-xs font-semibold uppercase tracking-wider">{section.label}</h3>
+								<ul className="text-muted-foreground mt-4 space-y-2 text-sm">
 									{section.links.map((link) => (
 										<li key={link.title}>
 											<a
 												href={link.href}
-												className="hover:text-foreground inline-flex items-center transition-all duration-300 hover:translate-x-1"
+												className="hover:text-foreground inline-flex items-center transition-all duration-300"
+												target={link.href.startsWith('http') ? '_blank' : undefined}
+												rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
 											>
 												{link.icon && <link.icon className="me-2 size-4" />}
 												{link.title}
@@ -98,7 +100,7 @@ export function Footer() {
 			</div>
 		</footer>
 	);
-};
+}
 
 type ViewAnimationProps = {
 	delay?: number;
@@ -110,7 +112,7 @@ function AnimatedContainer({ className, delay = 0.1, children }: ViewAnimationPr
 	const shouldReduceMotion = useReducedMotion();
 
 	if (shouldReduceMotion) {
-		return <div className={className}>{children}</div>;
+		return children;
 	}
 
 	return (
@@ -124,4 +126,4 @@ function AnimatedContainer({ className, delay = 0.1, children }: ViewAnimationPr
 			{children}
 		</motion.div>
 	);
-};
+}

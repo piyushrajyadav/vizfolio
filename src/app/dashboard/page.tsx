@@ -1,24 +1,21 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BeamsBackground } from '@/components/ui/beams-background';
-import { getCurrentUser, getProfile, getProjects, getSkills, Profile, Project, Skill } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { User } from '@supabase/supabase-js';
-import {
-  UserIcon,
-  FolderIcon,
-  BrainIcon,
-  PaletteIcon,
-  SparklesIcon,
+import { getCurrentUser, getProfile, getProjects, getSkills, Profile, Project, Skill } from '@/lib/supabase';
+import { 
+  HomeIcon, 
+  UserIcon, 
+  FolderIcon, 
+  BrainIcon, 
+  PaletteIcon, 
+  SparklesIcon, 
   EyeIcon,
-  SettingsIcon,
-  LoaderIcon,
+  LoaderIcon
 } from 'lucide-react';
 
+import { DashboardHome } from '@/components/dashboard/dashboard-home';
 import { ProfileTab } from '@/components/dashboard/profile-tab';
 import { ProjectsTab } from '@/components/dashboard/projects-tab';
 import { SkillsTab } from '@/components/dashboard/skills-tab';
@@ -26,17 +23,24 @@ import { ThemesTab } from '@/components/dashboard/themes-tab';
 import { AIAssistantTab } from '@/components/dashboard/ai-assistant-tab';
 import { PreviewTab } from '@/components/dashboard/preview-tab';
 
-const tabs = [
+interface DashboardTab {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const tabs: DashboardTab[] = [
+  { id: 'home', label: 'Home', icon: HomeIcon },
   { id: 'profile', label: 'Profile', icon: UserIcon },
   { id: 'projects', label: 'Projects', icon: FolderIcon },
   { id: 'skills', label: 'Skills', icon: BrainIcon },
   { id: 'themes', label: 'Themes', icon: PaletteIcon },
   { id: 'ai-assistant', label: 'AI Assistant', icon: SparklesIcon },
-  { id: 'preview', label: 'Preview', icon: EyeIcon },
+  { id: 'preview', label: 'Preview/Publish', icon: EyeIcon },
 ];
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('home');
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -44,203 +48,142 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadUserData();
+    loadDashboardData();
   }, []);
 
-  const loadUserData = async () => {
+  const loadDashboardData = async () => {
     try {
-      const { user } = await getCurrentUser();
-      if (user) {
-        setUser(user);
-        const { data: profileData } = await getProfile(user.id);
-        setProfile(profileData);
-        
-        const { data: projectsData } = await getProjects(user.id);
-        setProjects(projectsData || []);
-        
-        const { data: skillsData } = await getSkills(user.id);
-        setSkills(skillsData || []);
+      const { user: currentUser, error } = await getCurrentUser();
+      if (error || !currentUser) {
+        window.location.href = '/auth';
+        return;
       }
+
+      setUser(currentUser);
+      
+      const [profileResult, projectsResult, skillsResult] = await Promise.all([
+        getProfile(currentUser.id),
+        getProjects(currentUser.id),
+        getSkills(currentUser.id)
+      ]);
+
+      setProfile(profileResult.data);
+      setProjects(projectsResult.data || []);
+      setSkills(skillsResult.data || []);
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshProfile = async () => {
-    if (user) {
-      const { data: profileData } = await getProfile(user.id);
-      setProfile(profileData);
-    }
-  };
-
-  const refreshProjects = async () => {
-    if (user) {
-      const { data: projectsData } = await getProjects(user.id);
-      setProjects(projectsData || []);
-    }
-  };
-
-  const refreshSkills = async () => {
-    if (user) {
-      const { data: skillsData } = await getSkills(user.id);
-      setSkills(skillsData || []);
-    }
-  };
-
-  const refreshData = async () => {
-    await Promise.all([
-      refreshProfile(),
-      refreshProjects(),
-      refreshSkills(),
-    ]);
+  const refreshData = () => {
+    loadDashboardData();
   };
 
   if (loading) {
     return (
-      <BeamsBackground className="min-h-screen" intensity="medium">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="flex items-center gap-3 text-white">
-            <LoaderIcon className="size-6 animate-spin" />
-            <span>Loading dashboard...</span>
-          </div>
+      <div className="min-h-screen pt-16 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-white">
+          <LoaderIcon className="size-6 animate-spin" />
+          <span>Loading dashboard...</span>
         </div>
-      </BeamsBackground>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <BeamsBackground className="min-h-screen" intensity="medium">
-        <div className="flex items-center justify-center min-h-screen">
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm p-8">
-            <CardContent className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
-              <p className="text-white/70 mb-6">Please sign in to access your dashboard</p>
-              <Button asChild>
-                <a href="/auth">Sign In</a>
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen pt-16 flex items-center justify-center">
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
+          <p className="text-white/70 mb-6">Please sign in to access your dashboard</p>
+          <a href="/auth" className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+            Sign In
+          </a>
         </div>
-      </BeamsBackground>
+      </div>
     );
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return <DashboardHome user={user} profile={profile} projects={projects} skills={skills} onNavigate={setActiveTab} refreshData={refreshData} />;
+      case 'profile':
+        return <ProfileTab user={user} profile={profile} refreshData={refreshData} />;
+      case 'projects':
+        return <ProjectsTab user={user} projects={projects} refreshData={refreshData} />;
+      case 'skills':
+        return <SkillsTab user={user} skills={skills} refreshData={refreshData} />;
+      case 'themes':
+        return <ThemesTab user={user} profile={profile} refreshData={refreshData} />;
+      case 'ai-assistant':
+        return <AIAssistantTab user={user} refreshData={refreshData} />;
+      case 'preview':
+        return <PreviewTab user={user} profile={profile} projects={projects} skills={skills} />;
+      default:
+        return <DashboardHome user={user} profile={profile} projects={projects} skills={skills} onNavigate={setActiveTab} refreshData={refreshData} />;
+    }
+  };
+
   return (
-    <BeamsBackground className="min-h-screen" intensity="medium">
-      <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                Welcome back{profile?.name ? `, ${profile.name}` : ''}!
-              </h1>
-              <p className="text-white/70">
-                {profile?.role || 'Set up your profile to get started'}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="border-white/20 text-white hover:bg-white/10"
-                onClick={() => setActiveTab('preview')}
-              >
-                <EyeIcon className="size-4 mr-2" />
-                Preview Portfolio
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                <SettingsIcon className="size-4 mr-2" />
-                Settings
-              </Button>
+    <div className="min-h-screen pt-16">
+      <div className="relative z-10 flex">
+        <div className="w-64 min-h-screen bg-black/20 backdrop-blur-sm border-r border-white/20 p-6">
+          <nav className="space-y-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'bg-white/20 text-white backdrop-blur-sm'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="size-5" />
+                  <span className="font-medium">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto pt-8">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {user.email?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate">
+                    {profile?.name || user.email}
+                  </p>
+                  <p className="text-white/60 text-sm truncate">
+                    {profile?.role || 'Portfolio Builder'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex space-x-1 rounded-lg bg-white/10 p-1 backdrop-blur-sm overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 rounded-md py-3 px-4 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-md'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <tab.icon className="size-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Tab Content */}
-        <div className="flex-1">
+        <div className="flex-1 p-6">
           <AnimatePresence mode="wait">
-            {activeTab === 'profile' && (
-              <ProfileTab 
-                key="profile"
-                user={user} 
-                profile={profile} 
-                onProfileUpdate={refreshProfile}
-              />
-            )}
-            {activeTab === 'projects' && (
-              <ProjectsTab 
-                key="projects"
-                user={user}
-                projects={projects}
-                onProjectsUpdate={refreshProjects}
-              />
-            )}
-            {activeTab === 'skills' && (
-              <SkillsTab 
-                key="skills"
-                user={user}
-                skills={skills}
-                onSkillsUpdate={refreshSkills}
-              />
-            )}
-            {activeTab === 'themes' && (
-              <ThemesTab 
-                key="themes"
-                user={user}
-                profile={profile}
-                onProfileUpdate={refreshProfile}
-              />
-            )}
-            {activeTab === 'ai-assistant' && (
-              <AIAssistantTab 
-                key="ai-assistant"
-                user={user}
-                profile={profile}
-                projects={projects}
-                skills={skills}
-                onDataUpdate={refreshData}
-              />
-            )}
-            {activeTab === 'preview' && (
-              <PreviewTab 
-                key="preview"
-                user={user}
-                profile={profile}
-                projects={projects}
-                skills={skills}
-              />
-            )}
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderTabContent()}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
-    </BeamsBackground>
+    </div>
   );
 }

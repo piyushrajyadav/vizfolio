@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 function FloatingPaths({ position }: { position: number }) {
     const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -57,6 +61,32 @@ export function BackgroundPaths({
     title?: string;
 }) {
     const words = title.split(" ");
+    const router = useRouter();
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        checkUser();
+    }, []);
+
+    const checkUser = async () => {
+        try {
+            const { user } = await getCurrentUser();
+            setUser(user);
+        } catch (error) {
+            console.error('Error checking user:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGetStarted = () => {
+        if (user) {
+            router.push('/dashboard');
+        } else {
+            router.push('/auth');
+        }
+    };
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-white dark:bg-neutral-950">
@@ -117,27 +147,28 @@ export function BackgroundPaths({
                         transition={{ delay: 2 }}
                         className="flex justify-center items-center mb-12"
                     >
-                        <Link href="/auth" className="cursor-pointer">
-                            <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 
-                                dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg 
-                                overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                                <Button
-                                    size="lg"
-                                    className="rounded-[1.15rem] px-12 py-8 text-xl font-semibold backdrop-blur-md 
-                                    bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 
-                                    group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10
-                                    hover:shadow-md dark:hover:shadow-neutral-800/50 cursor-pointer"
-                                >
-                                    <span className="opacity-90 group-hover:opacity-100 transition-opacity">
-                                        Get Started
-                                    </span>
-                                    <span className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
-                                        transition-all duration-300">
-                                        →
-                                    </span>
-                                </Button>
-                            </div>
-                        </Link>
+                        <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 
+                            dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg 
+                            overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                            onClick={handleGetStarted}
+                        >
+                            <Button
+                                size="lg"
+                                className="rounded-[1.15rem] px-12 py-8 text-xl font-semibold backdrop-blur-md 
+                                bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 
+                                group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10
+                                hover:shadow-md dark:hover:shadow-neutral-800/50 cursor-pointer"
+                                disabled={loading}
+                            >
+                                <span className="opacity-90 group-hover:opacity-100 transition-opacity">
+                                    {loading ? 'Loading...' : user ? 'Go to Dashboard' : 'Get Started'}
+                                </span>
+                                <span className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
+                                    transition-all duration-300">
+                                    →
+                                </span>
+                            </Button>
+                        </div>
                     </motion.div>
                 </motion.div>
             </div>

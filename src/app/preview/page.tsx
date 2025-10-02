@@ -73,39 +73,43 @@ export default function PreviewPage() {
   const ActiveThemeComponent = themes.find(theme => theme.id === activeTheme)?.component || MinimalistTheme;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Theme Selector */}
-      <div className="fixed top-4 left-4 right-4 z-50">
-        <Card className="shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Theme Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex flex-wrap gap-3">
-              {themes.map((theme) => (
-                <Button
-                  key={theme.id}
-                  variant={activeTheme === theme.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveTheme(theme.id)}
-                  className="gap-2"
-                >
-                  {theme.name}
-                  {activeTheme === theme.id && <Badge variant="secondary">Active</Badge>}
-                </Button>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              {themes.find(theme => theme.id === activeTheme)?.description}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="min-h-screen">
+        {/* Theme Selector */}
+        <div className="fixed top-4 left-4 right-4 z-50">
+          <Card className="shadow-lg bg-white/10 border-white/20 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white">Theme Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex flex-wrap gap-3">
+                {themes.map((theme) => (
+                  <Button
+                    key={theme.id}
+                    variant={activeTheme === theme.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveTheme(theme.id)}
+                    className={`gap-2 ${
+                      activeTheme === theme.id 
+                        ? "bg-blue-600 hover:bg-blue-700" 
+                        : "border-white/20 text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {theme.name}
+                    {activeTheme === theme.id && <Badge variant="secondary">Active</Badge>}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-sm text-white/70 mt-2">
+                {themes.find(theme => theme.id === activeTheme)?.description}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Theme Preview */}
-      <div className="pt-32">
-        <ActiveThemeComponent profile={mockProfile} projects={mockProjects} />
-      </div>
+        {/* Theme Preview */}
+        <div className="pt-32">
+          <ActiveThemeComponent profile={mockProfile} projects={mockProjects} />
+        </div>
     </div>
   );
 }

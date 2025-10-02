@@ -1,64 +1,101 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 const themes = [
   {
-    name: "Minimalist",
-    description: "Clean, white background with elegant typography and subtle shadows.",
+    name: "Minimal White",
+    description: "Clean and minimalist design with focus on content",
     preview: "bg-white border-2 border-neutral-200",
     accent: "bg-neutral-800",
-    features: ["Clean Design", "Serif Fonts", "Subtle Shadows"],
+    features: ["Clean", "Professional", "Minimal"],
     bestFor: "Writers, Consultants",
+    selected: true
   },
   {
-    name: "Professional",
-    description: "Corporate blue palette perfect for business professionals.",
-    preview: "bg-gradient-to-br from-blue-50 to-slate-100 border-2 border-blue-200",
-    accent: "bg-blue-600",
-    features: ["Corporate Colors", "Grid Layout", "Professional"],
-    bestFor: "Business, Corporate",
-  },
-  {
-    name: "Dark Mode",
-    description: "Sleek dark theme with neon accents and glow effects.",
+    name: "Professional Dark",
+    description: "Dark theme perfect for developers and tech professionals",
     preview: "bg-gradient-to-br from-gray-900 to-black border-2 border-gray-700",
     accent: "bg-purple-500",
-    features: ["Dark Background", "Neon Accents", "Glow Effects"],
+    features: ["Dark", "Professional", "Tech"],
     bestFor: "Developers, Coders",
+    selected: false
+  },
+  {
+    name: "Creative Neon",
+    description: "Bold and creative with vibrant colors and gradients",
+    preview: "bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 border-2 border-purple-400",
+    accent: "bg-pink-500",
+    features: ["Creative", "Colorful", "Bold"],
+    bestFor: "Artists, Designers",
+    selected: false
+  },
+  {
+    name: "Grid Portfolio",
+    description: "Grid-based layout showcasing projects in an organized manner",
+    preview: "bg-gradient-to-br from-blue-50 to-slate-100 border-2 border-blue-200",
+    accent: "bg-blue-600",
+    features: ["Grid", "Organized", "Portfolio"],
+    bestFor: "Business, Corporate",
+    selected: false
   },
   {
     name: "Glassmorphism",
-    description: "Modern frosted glass cards with blur and transparency effects.",
+    description: "Modern glassmorphism design with blur effects and transparency",
     preview: "bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 border-2 border-white/20",
     accent: "bg-white/30",
-    features: ["Glass Effects", "Gradients", "Modern UI"],
+    features: ["Modern", "Glass", "Blur"],
     bestFor: "Designers, Creative",
+    selected: false
   },
   {
-    name: "Creative",
-    description: "Bold colors and asymmetric layouts for creative professionals.",
+    name: "Playful Colors",
+    description: "Fun and vibrant theme with playful animations and colors",
     preview: "bg-gradient-to-br from-orange-400 to-pink-500 border-2 border-orange-300",
     accent: "bg-yellow-400",
-    features: ["Bold Colors", "Asymmetric", "Animations"],
-    bestFor: "Artists, Designers",
-  },
-  {
-    name: "Photography",
-    description: "Visual-focused layout with masonry grid for showcasing images.",
-    preview: "bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300",
-    accent: "bg-gray-600",
-    features: ["Image Focus", "Masonry Grid", "Minimal Text"],
-    bestFor: "Photographers, Artists",
+    features: ["Fun", "Vibrant", "Animated"],
+    bestFor: "Creative, Fun",
+    selected: false
   },
 ];
 
 export function ThemesSection() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    try {
+      const { user } = await getCurrentUser();
+      setUser(user);
+    } catch (error) {
+      console.error('Error checking user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreviewTheme = () => {
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth');
+    }
+  };
+
   return (
     <section id="themes" className="py-20 lg:py-32 bg-neutral-50 dark:bg-neutral-900">
       <div className="container mx-auto px-4 md:px-6">
@@ -126,14 +163,14 @@ export function ThemesSection() {
                     ))}
                   </div>
 
-                  <Link href="/auth">
-                    <Button 
-                      variant="outline" 
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
-                    >
-                      Preview Theme
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
+                    onClick={handlePreviewTheme}
+                    disabled={loading}
+                  >
+                    {theme.selected ? 'Selected' : loading ? 'Loading...' : user ? 'Select Theme' : 'Preview Theme'}
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>

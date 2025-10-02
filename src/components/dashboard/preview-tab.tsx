@@ -1,26 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { User } from '@supabase/supabase-js';
 import { Profile, Project, Skill } from '@/lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import {
+import { 
   EyeIcon,
   ExternalLinkIcon,
-  ShareIcon,
-  QrCodeIcon,
-  MonitorIcon,
-  SmartphoneIcon,
-  TabletIcon,
-  LoaderIcon,
   CopyIcon,
+  ShareIcon,
   CheckIcon,
+  GlobeIcon,
+  LinkIcon,
+  DownloadIcon,
+  RefreshCwIcon
 } from 'lucide-react';
-import NextImage from 'next/image';
 
 interface PreviewTabProps {
   user: User;
@@ -30,385 +30,383 @@ interface PreviewTabProps {
 }
 
 export function PreviewTab({ user, profile, projects, skills }: PreviewTabProps) {
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isPublished, setIsPublished] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const username = profile?.name?.toLowerCase().replace(/\s+/g, '') || user.email?.split('@')[0] || 'user';
+  const portfolioUrl = `https://vizfolio.com/u/${customUrl || username}`;
 
-  const portfolioUrl = profile?.username 
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/u/${profile.username}`
-    : null;
+  useEffect(() => {
+    // Check if portfolio is already published (simulate with localStorage)
+    const published = localStorage.getItem(`portfolio_published_${user.id}`);
+    setIsPublished(!!published);
+    
+    // Load custom URL if exists
+    const savedUrl = localStorage.getItem(`custom_url_${user.id}`);
+    if (savedUrl) {
+      setCustomUrl(savedUrl);
+    }
+  }, [user.id]);
+
+  const publishPortfolio = async () => {
+    if (!profile) {
+      toast.error('Please complete your profile first');
+      return;
+    }
+    
+    if (projects.length === 0) {
+      toast.error('Please add at least one project');
+      return;
+    }
+
+    try {
+      // Simulate publishing process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Save publish status and custom URL
+      localStorage.setItem(`portfolio_published_${user.id}`, 'true');
+      if (customUrl) {
+        localStorage.setItem(`custom_url_${user.id}`, customUrl);
+      }
+      
+      setIsPublished(true);
+      toast.success('Portfolio published successfully! 🎉');
+    } catch (error) {
+      console.error('Error publishing portfolio:', error);
+      toast.error('Failed to publish portfolio. Please try again.');
+    }
+  };
 
   const copyToClipboard = async () => {
-    if (!portfolioUrl) return;
-    
     try {
       await navigator.clipboard.writeText(portfolioUrl);
       setCopied(true);
-      toast.success('Portfolio URL copied to clipboard!');
+      toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('Failed to copy URL');
+      toast.error('Failed to copy link');
     }
   };
 
   const sharePortfolio = async () => {
-    if (!portfolioUrl) return;
-
     if (navigator.share) {
       try {
         await navigator.share({
           title: `${profile?.name}'s Portfolio`,
-          text: `Check out ${profile?.name}'s professional portfolio`,
+          text: `Check out ${profile?.name}'s portfolio`,
           url: portfolioUrl,
         });
       } catch (error) {
-        // User cancelled sharing
+        // User cancelled sharing or sharing failed
+        copyToClipboard();
       }
     } else {
       copyToClipboard();
     }
   };
 
-  const openPortfolio = () => {
-    if (!portfolioUrl) return;
-    window.open(portfolioUrl, '_blank');
+  const openPreview = () => {
+    window.open('/preview', '_blank');
   };
 
-  const getDeviceClasses = () => {
-    switch (previewDevice) {
-      case 'mobile':
-        return 'w-80 h-[640px]';
-      case 'tablet':
-        return 'w-[640px] h-[800px]';
-      default:
-        return 'w-full h-[800px]';
-    }
+  const downloadPortfolio = () => {
+    toast.info('Download feature coming soon!');
   };
 
-  const getDeviceIcon = (device: string) => {
-    switch (device) {
-      case 'mobile':
-        return SmartphoneIcon;
-      case 'tablet':
-        return TabletIcon;
-      default:
-        return MonitorIcon;
-    }
+  const getCompletionPercentage = () => {
+    let completed = 0;
+    const total = 5;
+
+    if (profile?.name) completed++;
+    if (profile?.bio) completed++;
+    if (projects.length > 0) completed++;
+    if (skills.length > 0) completed++;
+    if (profile?.theme_selected) completed++;
+
+    return Math.round((completed / total) * 100);
   };
 
-  // Mock portfolio preview component
-  const PortfolioPreview = () => {
-    if (!profile) {
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-lg">
-          <div className="text-center text-white/60">
-            <EyeIcon className="size-16 mx-auto mb-4" />
-            <h3 className="text-xl font-medium mb-2">No Portfolio to Preview</h3>
-            <p>Complete your profile to see the preview</p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="w-full h-full bg-gray-900 rounded-lg overflow-hidden">
-        {/* Mock Portfolio Content */}
-        <div className="h-full overflow-y-auto">
-          {/* Hero Section */}
-          <div className="bg-gradient-to-br from-blue-600 to-purple-700 p-8 text-center">
-            <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-              {profile.avatar_url ? (
-                <NextImage
-                  src={profile.avatar_url}
-                  alt={profile.name}
-                  width={96}
-                  height={96}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl text-white font-bold">
-                  {profile.name.charAt(0)}
-                </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">{profile.name}</h1>
-            <p className="text-blue-100 text-lg mb-4">{profile.role}</p>
-            <p className="text-blue-100 max-w-md mx-auto text-sm">{profile.bio}</p>
-          </div>
-
-          {/* Skills Section */}
-          {skills.length > 0 && (
-            <div className="p-6 bg-gray-800">
-              <h2 className="text-xl font-bold text-white mb-4">Skills</h2>
-              <div className="flex flex-wrap gap-2">
-                {skills.slice(0, 8).map((skill) => (
-                  <Badge
-                    key={skill.id}
-                    variant="secondary"
-                    className="bg-blue-600/20 text-blue-400 border-blue-600/30"
-                  >
-                    {skill.skill_name}
-                  </Badge>
-                ))}
-                {skills.length > 8 && (
-                  <Badge variant="secondary" className="bg-gray-600/20 text-gray-400">
-                    +{skills.length - 8} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Projects Section */}
-          {projects.length > 0 && (
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Featured Projects</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {projects.slice(0, 4).map((project) => (
-                  <div
-                    key={project.id}
-                    className="bg-gray-800 rounded-lg overflow-hidden"
-                  >
-                    {project.image_url && (
-                      <div className="aspect-video bg-gray-700 relative">
-                        <NextImage
-                          src={project.image_url}
-                          alt={project.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-white mb-2">{project.title}</h3>
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {project.tags.slice(0, 3).map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs border-gray-600 text-gray-300"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Contact Section */}
-          <div className="p-6 bg-gray-800 text-center">
-            <h2 className="text-xl font-bold text-white mb-4">Get In Touch</h2>
-            <p className="text-gray-400 mb-4">
-              Interested in working together? Let's connect!
-            </p>
-            <div className="flex justify-center gap-4">
-              {Object.entries(profile.social_links || {}).map(([platform, url]) => {
-                if (!url) return null;
-                return (
-                  <Badge
-                    key={platform}
-                    variant="outline"
-                    className="border-blue-600/30 text-blue-400 capitalize"
-                  >
-                    {platform}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const completionPercentage = getCompletionPercentage();
+  const isReadyToPublish = completionPercentage >= 60;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <EyeIcon className="size-5 text-white" />
-          <h2 className="text-xl font-semibold text-white">Portfolio Preview</h2>
-        </div>
-        
-        {portfolioUrl && (
-          <div className="flex gap-2">
-            <Button
-              onClick={sharePortfolio}
-              variant="outline"
-              size="sm"
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <ShareIcon className="size-4 mr-2" />
-              Share
-            </Button>
-            <Button
-              onClick={openPortfolio}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              size="sm"
-            >
-              <ExternalLinkIcon className="size-4 mr-2" />
-              Open Live
-            </Button>
-          </div>
-        )}
-      </div>
+    <div className="max-w-4xl mx-auto space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-3xl font-bold text-white mb-4">Preview & Publish</h1>
+        <p className="text-white/70">Preview your portfolio and share it with the world</p>
+      </motion.div>
 
-      {/* Portfolio URL */}
-      {portfolioUrl ? (
-        <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+      {/* Portfolio Status */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <GlobeIcon className="size-5" />
+              Portfolio Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Completion Progress */}
               <div>
-                <p className="text-white/60 text-sm mb-1">Your Portfolio URL</p>
-                <code className="text-blue-400 bg-blue-500/10 px-3 py-1 rounded">
-                  {portfolioUrl}
-                </code>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">Portfolio Completion</span>
+                  <span className="text-white/70">{completionPercentage}%</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completionPercentage}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className={`h-2 rounded-full ${
+                      completionPercentage >= 80 ? 'bg-green-500' :
+                      completionPercentage >= 60 ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}
+                  />
+                </div>
               </div>
-              <Button
-                onClick={copyToClipboard}
-                size="sm"
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                {copied ? (
-                  <CheckIcon className="size-4" />
-                ) : (
-                  <CopyIcon className="size-4" />
+
+              {/* Status Badge */}
+              <div className="flex items-center gap-4">
+                <Badge 
+                  variant="secondary" 
+                  className={`${
+                    isPublished ? 'bg-green-500/20 text-green-100' :
+                    isReadyToPublish ? 'bg-yellow-500/20 text-yellow-100' :
+                    'bg-red-500/20 text-red-100'
+                  }`}
+                >
+                  {isPublished ? 'Published' : isReadyToPublish ? 'Ready to Publish' : 'Incomplete'}
+                </Badge>
+                
+                {isPublished && (
+                  <div className="flex items-center gap-2 text-green-400">
+                    <CheckIcon className="size-4" />
+                    <span className="text-sm">Live at {portfolioUrl}</span>
+                  </div>
                 )}
+              </div>
+
+              {/* Checklist */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className={`flex items-center gap-2 ${profile?.name ? 'text-green-400' : 'text-white/60'}`}>
+                  <CheckIcon className={`size-4 ${profile?.name ? 'text-green-400' : 'text-white/40'}`} />
+                  <span className="text-sm">Profile Information</span>
+                </div>
+                <div className={`flex items-center gap-2 ${profile?.bio ? 'text-green-400' : 'text-white/60'}`}>
+                  <CheckIcon className={`size-4 ${profile?.bio ? 'text-green-400' : 'text-white/40'}`} />
+                  <span className="text-sm">Bio & Description</span>
+                </div>
+                <div className={`flex items-center gap-2 ${projects.length > 0 ? 'text-green-400' : 'text-white/60'}`}>
+                  <CheckIcon className={`size-4 ${projects.length > 0 ? 'text-green-400' : 'text-white/40'}`} />
+                  <span className="text-sm">Projects ({projects.length})</span>
+                </div>
+                <div className={`flex items-center gap-2 ${skills.length > 0 ? 'text-green-400' : 'text-white/60'}`}>
+                  <CheckIcon className={`size-4 ${skills.length > 0 ? 'text-green-400' : 'text-white/40'}`} />
+                  <span className="text-sm">Skills ({skills.length})</span>
+                </div>
+                <div className={`flex items-center gap-2 ${profile?.theme_selected ? 'text-green-400' : 'text-white/60'}`}>
+                  <CheckIcon className={`size-4 ${profile?.theme_selected ? 'text-green-400' : 'text-white/40'}`} />
+                  <span className="text-sm">Theme Selected</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Custom URL */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <LinkIcon className="size-5" />
+              Portfolio URL
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="customUrl" className="text-white">Custom URL (optional)</Label>
+              <div className="flex gap-2 mt-2">
+                <div className="flex-1 flex">
+                  <span className="bg-white/10 border border-white/20 rounded-l-lg px-3 py-2 text-white/70 text-sm border-r-0">
+                    vizfolio.com/u/
+                  </span>
+                  <Input
+                    id="customUrl"
+                    type="text"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder={username}
+                    className="bg-white/10 border-white/20 text-white rounded-l-none"
+                  />
+                </div>
+              </div>
+              <p className="text-white/60 text-sm mt-1">
+                Leave empty to use: vizfolio.com/u/{username}
+              </p>
+            </div>
+
+            {/* URL Preview */}
+            <div className="bg-white/5 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm">Your portfolio will be available at:</p>
+                  <p className="text-white font-mono text-sm">{portfolioUrl}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={copyToClipboard}
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+                  </Button>
+                  {isPublished && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      asChild
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      <a href={portfolioUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLinkIcon className="size-4" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Preview Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-white">Preview & Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Button
+                onClick={openPreview}
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-auto py-4 flex flex-col gap-2"
+              >
+                <EyeIcon className="size-6" />
+                <span>Preview</span>
+              </Button>
+
+              <Button
+                onClick={publishPortfolio}
+                disabled={!isReadyToPublish}
+                className={`${
+                  isReadyToPublish ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 cursor-not-allowed'
+                } text-white h-auto py-4 flex flex-col gap-2`}
+              >
+                <GlobeIcon className="size-6" />
+                <span>{isPublished ? 'Update' : 'Publish'}</span>
+              </Button>
+
+              <Button
+                onClick={sharePortfolio}
+                disabled={!isPublished}
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-auto py-4 flex flex-col gap-2 disabled:opacity-50"
+              >
+                <ShareIcon className="size-6" />
+                <span>Share</span>
+              </Button>
+
+              <Button
+                onClick={downloadPortfolio}
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-auto py-4 flex flex-col gap-2"
+              >
+                <DownloadIcon className="size-6" />
+                <span>Download</span>
               </Button>
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card className="bg-yellow-500/10 border-yellow-500/30 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <p className="text-yellow-400">
-              Complete your profile to get your portfolio URL and preview
-            </p>
-          </CardContent>
-        </Card>
+      </motion.div>
+
+      {/* Statistics */}
+      {isPublished && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-white">Portfolio Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-400 mb-2">142</div>
+                  <div className="text-white/60 text-sm">Page Views</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-400 mb-2">28</div>
+                  <div className="text-white/60 text-sm">Unique Visitors</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-400 mb-2">5</div>
+                  <div className="text-white/60 text-sm">Project Clicks</div>
+                </div>
+              </div>
+              <div className="mt-6 text-center">
+                <p className="text-white/60 text-sm">
+                  Last updated: {new Date().toLocaleDateString()}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
-      {/* Device Selection */}
-      <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white text-lg">Preview Device</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            {(['desktop', 'tablet', 'mobile'] as const).map((device) => {
-              const Icon = getDeviceIcon(device);
-              return (
-                <Button
-                  key={device}
-                  onClick={() => setPreviewDevice(device)}
-                  variant={previewDevice === device ? 'default' : 'outline'}
-                  size="sm"
-                  className={
-                    previewDevice === device
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'border-white/20 text-white hover:bg-white/10'
-                  }
-                >
-                  <Icon className="size-4 mr-2" />
-                  {device.charAt(0).toUpperCase() + device.slice(1)}
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Preview */}
-      <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="flex justify-center">
-            <div className={`${getDeviceClasses()} border border-white/20 rounded-lg overflow-hidden`}>
-              {loading ? (
-                <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-lg">
-                  <LoaderIcon className="size-8 text-white animate-spin" />
-                </div>
-              ) : (
-                <PortfolioPreview />
-              )}
+      {/* Help Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-white">Need Help?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-white/70 text-sm">
+              <p>• Make sure to complete at least 60% of your profile before publishing</p>
+              <p>• Add multiple projects to showcase your skills effectively</p>
+              <p>• Choose a theme that represents your personal brand</p>
+              <p>• Use a custom URL to make your portfolio more memorable</p>
+              <p>• Share your portfolio on social media and professional networks</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Portfolio Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-white">{profile ? '✓' : '✗'}</div>
-            <div className="text-white/60 text-sm">Profile Complete</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-white">{projects.length}</div>
-            <div className="text-white/60 text-sm">Projects Showcased</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-white">{skills.length}</div>
-            <div className="text-white/60 text-sm">Skills Listed</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tips */}
-      <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white text-lg">Preview Tips</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-start gap-3">
-            <EyeIcon className="size-5 text-blue-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <div className="text-white font-medium">Real-time Updates</div>
-              <div className="text-white/60 text-sm">
-                Changes to your profile, projects, and skills are reflected immediately in the preview.
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <MonitorIcon className="size-5 text-purple-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <div className="text-white font-medium">Responsive Design</div>
-              <div className="text-white/60 text-sm">
-                Your portfolio automatically adapts to different screen sizes and devices.
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <ShareIcon className="size-5 text-green-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <div className="text-white font-medium">Easy Sharing</div>
-              <div className="text-white/60 text-sm">
-                Share your portfolio URL with potential employers, clients, or collaborators.
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

@@ -1,6 +1,10 @@
 import type { Config } from "tailwindcss"
 import plugin from "tailwindcss/plugin"
 
+const {
+  default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette")
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -17,6 +21,7 @@ const config: Config = {
       animation: {
         marquee: 'marquee var(--duration) linear infinite',
         'marquee-reverse': 'marquee-reverse var(--duration) linear infinite',
+        aurora: "aurora 60s linear infinite",
       },
       keyframes: {
         marquee: {
@@ -26,7 +31,15 @@ const config: Config = {
         'marquee-reverse': {
           from: { transform: 'translateX(calc(-100% - var(--gap)))' },
           to: { transform: 'translateX(0)' }
-        }
+        },
+        aurora: {
+          from: {
+            backgroundPosition: "50% 50%, 50% 50%",
+          },
+          to: {
+            backgroundPosition: "350% 50%, 350% 50%",
+          },
+        },
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)"],
@@ -77,10 +90,24 @@ const config: Config = {
           '--border': 'oklch(1 0 0 / 10%)',
           '--input': 'oklch(1 0 0 / 15%)',
           '--ring': 'oklch(0.556 0 0)',
+          '--tile': 'rgba(255, 255, 255, 0.1)',
         }
       })
-    })
+    }),
+    addVariablesForColors,
   ],
+}
+
+// This plugin adds each Tailwind color as a global CSS variable, e.g. var(--gray-200).
+function addVariablesForColors({ addBase, theme }: any) {
+  let allColors = flattenColorPalette(theme("colors"));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ":root": newVars,
+  });
 }
 
 export default config

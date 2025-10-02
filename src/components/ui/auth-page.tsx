@@ -57,7 +57,7 @@ export function AuthPage() {
 				} else if (data.user) {
 					setSuccess('Successfully signed in! Redirecting...');
 					setTimeout(() => {
-						router.push('/dashboard');
+						router.push('/');
 					}, 1500);
 				}
 			} else {
@@ -69,7 +69,7 @@ export function AuthPage() {
 					if (data.user.email_confirmed_at) {
 						setSuccess('Account created successfully! Redirecting...');
 						setTimeout(() => {
-							router.push('/dashboard');
+							router.push('/');
 						}, 1500);
 					} else {
 						setSuccess('Account created successfully! We have sent a confirmation link to your email address. Please check your email (including spam folder) and click the verification link to activate your account.');
@@ -98,7 +98,7 @@ export function AuthPage() {
 							&ldquo;Vizfolio has helped me showcase my work and land amazing clients faster than ever before.&rdquo;
 						</p>
 						<footer className="font-mono text-sm font-semibold">
-							~ Sarah Chen, UX Designer
+							~ Aashikant Kumar, UX Designer
 						</footer>
 					</blockquote>
 				</div>
