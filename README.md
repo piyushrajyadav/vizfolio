@@ -1,53 +1,119 @@
-# 🚀 Vizfolio - Modern Portfolio Builder
+# 🎨 Vizfolio - Professional Portfolio Builder
 
-Create stunning portfolios with multiple themes. Perfect for freelancers, students, and professionals.
+> **Create stunning, customizable portfolios in minutes with our modern, theme-based platform.**
 
-![Vizfolio Hero](https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-green?logo=supabase)](https://supabase.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## ✨ Features
+![Vizfolio Preview](https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop&q=80)
 
-- 🎨 **6 Beautiful Themes** - Minimalist, Dark, Professional, Glassmorphism, Creative, Photography
-- 🔐 **Secure Authentication** - Google, GitHub, Discord OAuth + Email/Password
-- 📱 **Fully Responsive** - Looks great on all devices
-- ⚡ **Lightning Fast** - Built with Next.js 14 and optimized for performance
-- 🌙 **Dark/Light Mode** - Interactive theme switcher with smooth transitions
-- 📊 **Real-time Dashboard** - Manage projects with live preview
-- 🔗 **Custom URLs** - Share your portfolio with memorable links
-- 📸 **Image Upload** - Supabase Storage integration for project images
-- 🎯 **SEO Optimized** - Meta tags and structured data for better visibility
+---
 
-## 🛠️ Tech Stack
+## 🌟 Overview
 
-- **Frontend:** Next.js 14, TypeScript, Tailwind CSS
-- **UI Components**: shadcn/ui, Radix UI
-- **Animations**: Framer Motion
-- **Backend**: Supabase (Auth, Storage, Database)
-- **Deployment**: Vercel
+**Vizfolio** is a cutting-edge portfolio builder designed for modern professionals, freelancers, students, and creatives. Built with the latest web technologies, it offers multiple professionally designed themes, seamless authentication, and real-time portfolio management.
 
-## 📁 Project Structure
+### 🎯 Perfect For
+- **Freelancers** - Showcase your services and attract clients
+- **Developers** - Display your projects and technical skills  
+- **Designers** - Present your creative work beautifully
+- **Students** - Build your professional presence
+- **Photographers** - Create stunning image galleries
+
+---
+
+## ✨ Key Features
+
+### 🎨 **Six Premium Themes**
+- **Minimalist** - Clean, elegant design with serif typography
+- **Professional** - Corporate blue palette for business professionals
+- **Dark Mode** - Sleek dark theme with neon accents and glow effects
+- **Glassmorphism** - Modern frosted glass cards with blur effects
+- **Creative** - Bold colors and asymmetric layouts for artists
+- **Photography** - Visual-focused layout with masonry grid
+
+### 🔐 **Secure Authentication System**
+- Email/password authentication with validation
+- Email verification workflow
+- Secure session management with Supabase
+- Password strength requirements (6+ characters)
+
+### � **Responsive & Accessible**
+- Fully responsive design across all devices
+- Dark/light mode support with system preference detection
+- Optimized for performance with Next.js Image optimization
+- SEO-friendly with proper meta tags
+
+### ⚡ **Modern Development Stack**
+- **Next.js 14** with App Router for optimal performance
+- **TypeScript** for type safety and better development experience
+- **Tailwind CSS** for utility-first styling
+- **Framer Motion** for smooth animations and interactions
+- **shadcn/ui** for consistent, accessible UI components
+
+---
+
+## 🛠️ Technology Stack
+
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Frontend** | Next.js 14, TypeScript | React framework with type safety |
+| **Styling** | Tailwind CSS, shadcn/ui | Utility-first CSS and component library |
+| **Animation** | Framer Motion | Smooth animations and transitions |
+| **Backend** | Supabase | Authentication, database, and storage |
+| **Database** | PostgreSQL (Supabase) | Structured data storage |
+| **Storage** | Supabase Storage | Image and file hosting |
+| **Deployment** | Vercel | Serverless deployment platform |
+
+---
+
+## 📁 Project Architecture
 
 ```
 vizfolio/
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── auth/              # Authentication page
-│   │   ├── dashboard/         # User dashboard
-│   │   ├── preview/           # Theme preview page
-│   │   └── page.tsx           # Landing page
-│   ├── components/
-│   │   ├── ui/                # Reusable UI components
-│   │   │   ├── background-paths.tsx
-│   │   │   ├── auth-page.tsx
-│   │   │   ├── navbar.tsx
-│   │   │   ├── features-section.tsx
-│   │   │   ├── themes-section.tsx
-│   │   │   ├── how-it-works-section.tsx
-│   │   │   ├── footer-section.tsx
-│   │   │   ├── web-gl-shader.tsx
-│   │   │   └── liquid-button.tsx
-│   │   └── themes/            # Portfolio themes
-│   │       ├── minimalist-theme.tsx
-│   │       └── dark-theme.tsx
+├── 📂 src/
+│   ├── 📂 app/                    # Next.js App Router
+│   │   ├── 📄 layout.tsx          # Root layout with providers
+│   │   ├── 📄 page.tsx            # Landing page
+│   │   ├── 📂 auth/               # Authentication
+│   │   │   └── 📄 page.tsx        # Login/signup page
+│   │   ├── 📂 dashboard/          # User dashboard
+│   │   │   └── 📄 page.tsx        # Project management
+│   │   └── 📂 preview/            # Theme preview
+│   │       └── 📄 page.tsx        # Portfolio preview
+│   ├── 📂 components/
+│   │   ├── 📂 ui/                 # Reusable UI components
+│   │   │   ├── 📄 floating-nav.tsx        # Navigation bar
+│   │   │   ├── 📄 enhanced-hero-section.tsx
+│   │   │   ├── 📄 auth-page.tsx           # Authentication form
+│   │   │   ├── 📄 features-section.tsx    # Features showcase
+│   │   │   ├── 📄 themes-section.tsx      # Theme gallery
+│   │   │   ├── 📄 testimonials.tsx        # User testimonials
+│   │   │   ├── 📄 beams-background.tsx    # Animated background
+│   │   │   └── 📄 web-gl-shader.tsx       # WebGL effects
+│   │   └── 📂 themes/             # Portfolio themes
+│   │       ├── 📄 minimalist-theme.tsx
+│   │       ├── 📄 dark-theme.tsx
+│   │       ├── 📄 professional-theme.tsx
+│   │       ├── 📄 glassmorphism-theme.tsx
+│   │       ├── 📄 creative-theme.tsx
+│   │       └── 📄 photography-theme.tsx
+│   ├── 📂 lib/
+│   │   ├── 📄 supabase.ts         # Supabase client config
+│   │   ├── 📄 supabase-server.ts  # Server-side Supabase
+│   │   └── 📄 utils.ts            # Utility functions
+│   └── 📂 types/                  # TypeScript definitions
+├── 📂 public/                     # Static assets
+├── 📄 package.json               # Dependencies and scripts
+├── 📄 tailwind.config.ts         # Tailwind configuration
+├── 📄 next.config.ts             # Next.js configuration
+└── 📄 README.md                  # Project documentation
+```
+
+---
 │   ├── lib/
 │   │   ├── utils.ts          # Utility functions
 │   │   └── supabase.ts       # Supabase configuration
