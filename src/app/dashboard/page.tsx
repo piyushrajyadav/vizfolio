@@ -1,231 +1,246 @@
 'use client';
 
-import { WebGLShader } from "@/components/ui/web-gl-shader";
-import { LiquidButton } from "@/components/ui/liquid-button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { PlusIcon, FolderIcon, UserIcon, PaletteIcon, SettingsIcon, ExternalLinkIcon } from "lucide-react";
-import { motion } from "framer-motion";
-import NextImage from "next/image";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BeamsBackground } from '@/components/ui/beams-background';
+import { getCurrentUser, getProfile, getProjects, getSkills, Profile, Project, Skill } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { User } from '@supabase/supabase-js';
+import {
+  UserIcon,
+  FolderIcon,
+  BrainIcon,
+  PaletteIcon,
+  SparklesIcon,
+  EyeIcon,
+  SettingsIcon,
+  LoaderIcon,
+} from 'lucide-react';
 
-// Mock data - in real app this would come from Supabase
-const mockProjects = [
-  {
-    id: 1,
-    title: "E-commerce Platform",
-    description: "A full-stack React application with payment integration",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=200&fit=crop",
-    tech: ["React", "Node.js", "MongoDB", "Stripe"],
-    liveUrl: "https://example.com",
-    githubUrl: "https://github.com/example",
-    createdAt: "2024-01-15"
-  },
-  {
-    id: 2,
-    title: "Task Management App",
-    description: "Collaborative project management tool with real-time updates",
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop",
-    tech: ["Vue.js", "Firebase", "TypeScript"],
-    liveUrl: "https://example.com",
-    githubUrl: "https://github.com/example",
-    createdAt: "2024-02-10"
-  },
-  {
-    id: 3,
-    title: "Portfolio Website",
-    description: "Personal portfolio built with Next.js and modern animations",
-    image: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=400&h=200&fit=crop",
-    tech: ["Next.js", "Tailwind CSS", "Framer Motion"],
-    liveUrl: "https://example.com",
-    githubUrl: "https://github.com/example",
-    createdAt: "2024-03-05"
-  }
+import { ProfileTab } from '@/components/dashboard/profile-tab';
+import { ProjectsTab } from '@/components/dashboard/projects-tab';
+import { SkillsTab } from '@/components/dashboard/skills-tab';
+import { ThemesTab } from '@/components/dashboard/themes-tab';
+import { AIAssistantTab } from '@/components/dashboard/ai-assistant-tab';
+import { PreviewTab } from '@/components/dashboard/preview-tab';
+
+const tabs = [
+  { id: 'profile', label: 'Profile', icon: UserIcon },
+  { id: 'projects', label: 'Projects', icon: FolderIcon },
+  { id: 'skills', label: 'Skills', icon: BrainIcon },
+  { id: 'themes', label: 'Themes', icon: PaletteIcon },
+  { id: 'ai-assistant', label: 'AI Assistant', icon: SparklesIcon },
+  { id: 'preview', label: 'Preview', icon: EyeIcon },
 ];
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const { user } = await getCurrentUser();
+      if (user) {
+        setUser(user);
+        const { data: profileData } = await getProfile(user.id);
+        setProfile(profileData);
+        
+        const { data: projectsData } = await getProjects(user.id);
+        setProjects(projectsData || []);
+        
+        const { data: skillsData } = await getSkills(user.id);
+        setSkills(skillsData || []);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const { data: profileData } = await getProfile(user.id);
+      setProfile(profileData);
+    }
+  };
+
+  const refreshProjects = async () => {
+    if (user) {
+      const { data: projectsData } = await getProjects(user.id);
+      setProjects(projectsData || []);
+    }
+  };
+
+  const refreshSkills = async () => {
+    if (user) {
+      const { data: skillsData } = await getSkills(user.id);
+      setSkills(skillsData || []);
+    }
+  };
+
+  const refreshData = async () => {
+    await Promise.all([
+      refreshProfile(),
+      refreshProjects(),
+      refreshSkills(),
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <BeamsBackground className="min-h-screen" intensity="medium">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex items-center gap-3 text-white">
+            <LoaderIcon className="size-6 animate-spin" />
+            <span>Loading dashboard...</span>
+          </div>
+        </div>
+      </BeamsBackground>
+    );
+  }
+
+  if (!user) {
+    return (
+      <BeamsBackground className="min-h-screen" intensity="medium">
+        <div className="flex items-center justify-center min-h-screen">
+          <Card className="bg-white/10 border-white/20 backdrop-blur-sm p-8">
+            <CardContent className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
+              <p className="text-white/70 mb-6">Please sign in to access your dashboard</p>
+              <Button asChild>
+                <a href="/auth">Sign In</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </BeamsBackground>
+    );
+  }
+
   return (
-    <div className="relative flex w-full flex-col items-center justify-start overflow-hidden min-h-screen">
-      <WebGLShader />
-      
-      <div className="relative z-10 w-full max-w-7xl mx-auto p-6">
-        {/* Dashboard Header */}
-        <div className="relative border border-[#27272a] p-6 mb-8 rounded-lg backdrop-blur-sm bg-black/20">
-          <div className="text-center mb-8">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-3 text-white text-center text-5xl md:text-7xl font-extrabold tracking-tighter"
-            >
-              Welcome to Your Dashboard
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-white/60 px-6 text-center text-sm md:text-lg"
-            >
-              Manage your projects, customize your portfolio, and share your work with the world.
-            </motion.p>
-            
-            <div className="my-8 flex items-center justify-center gap-1">
-              <span className="relative flex h-3 w-3 items-center justify-center">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-              </span>
-              <p className="text-xs text-green-500">Portfolio Status: Published</p>
+    <BeamsBackground className="min-h-screen" intensity="medium">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Welcome back{profile?.name ? `, ${profile.name}` : ''}!
+              </h1>
+              <p className="text-white/70">
+                {profile?.role || 'Set up your profile to get started'}
+              </p>
             </div>
-            
-            <div className="flex justify-center gap-4">
-              <LiquidButton className="text-white border rounded-full" size="lg">
-                View Live Portfolio
-              </LiquidButton>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                Share Portfolio
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={() => setActiveTab('preview')}
+              >
+                <EyeIcon className="size-4 mr-2" />
+                Preview Portfolio
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                <SettingsIcon className="size-4 mr-2" />
+                Settings
               </Button>
             </div>
           </div>
-        </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-white/10 bg-black/20 text-white backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">{mockProjects.length}</CardTitle>
-              <CardDescription className="text-white/60">Total Projects</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card className="border-white/10 bg-black/20 text-white backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">1,247</CardTitle>
-              <CardDescription className="text-white/60">Portfolio Views</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card className="border-white/10 bg-black/20 text-white backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">Minimalist</CardTitle>
-              <CardDescription className="text-white/60">Active Theme</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card className="border-white/10 bg-black/20 text-white backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">87%</CardTitle>
-              <CardDescription className="text-white/60">Profile Complete</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Projects Section */}
-          <div className="lg:col-span-2">
-            <Card className="border-white/10 bg-black/20 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-xl">Your Projects</CardTitle>
-                  <Button size="sm" className="gap-2">
-                    <PlusIcon className="size-4" />
-                    Add Project
-                  </Button>
-                </div>
-                <CardDescription className="text-white/60">
-                  Manage and showcase your best work
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mockProjects.map((project, index) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-white/10 rounded-lg p-4 hover:border-white/20 transition-colors group"
-                  >
-                    <div className="flex gap-4">
-                      <NextImage 
-                        src={project.image} 
-                        alt={project.title}
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 rounded-lg object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-white font-semibold group-hover:text-blue-400 transition-colors">
-                            {project.title}
-                          </h3>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" className="text-white/60 hover:text-white">
-                              <ExternalLinkIcon className="size-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-white/60 text-sm mb-3">{project.description}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {project.tech.map((tech) => (
-                            <Badge key={tech} variant="secondary" className="text-xs">
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </CardContent>
-            </Card>
+          {/* Navigation Tabs */}
+          <div className="flex space-x-1 rounded-lg bg-white/10 p-1 backdrop-blur-sm overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 rounded-md py-3 px-4 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-white text-gray-900 shadow-md'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <tab.icon className="size-4" />
+                {tab.label}
+              </button>
+            ))}
           </div>
+        </motion.div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card className="border-white/10 bg-black/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start gap-3 border-white/20 text-white hover:bg-white/10">
-                  <FolderIcon className="size-4" />
-                  Add New Project
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-3 border-white/20 text-white hover:bg-white/10">
-                  <UserIcon className="size-4" />
-                  Edit Profile
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-3 border-white/20 text-white hover:bg-white/10">
-                  <PaletteIcon className="size-4" />
-                  Change Theme
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-3 border-white/20 text-white hover:bg-white/10">
-                  <SettingsIcon className="size-4" />
-                  Settings
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="border-white/10 bg-black/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                        <div className="text-sm">
-                          <p className="text-white/60">Today</p>
-                          <p className="text-white">Updated project &ldquo;E-commerce Platform&rdquo;</p>
-                        </div>
-                        <div className="text-sm">
-                          <p className="text-white/60">Yesterday</p>
-                          <p className="text-white">Changed theme to &ldquo;Minimalist&rdquo;</p>
-                        </div>
-                        <div className="text-sm">
-                          <p className="text-white/60">2 days ago</p>
-                          <p className="text-white">Added new project &ldquo;Task Management App&rdquo;</p>
-                        </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Tab Content */}
+        <div className="flex-1">
+          <AnimatePresence mode="wait">
+            {activeTab === 'profile' && (
+              <ProfileTab 
+                key="profile"
+                user={user} 
+                profile={profile} 
+                onProfileUpdate={refreshProfile}
+              />
+            )}
+            {activeTab === 'projects' && (
+              <ProjectsTab 
+                key="projects"
+                user={user}
+                projects={projects}
+                onProjectsUpdate={refreshProjects}
+              />
+            )}
+            {activeTab === 'skills' && (
+              <SkillsTab 
+                key="skills"
+                user={user}
+                skills={skills}
+                onSkillsUpdate={refreshSkills}
+              />
+            )}
+            {activeTab === 'themes' && (
+              <ThemesTab 
+                key="themes"
+                user={user}
+                profile={profile}
+                onProfileUpdate={refreshProfile}
+              />
+            )}
+            {activeTab === 'ai-assistant' && (
+              <AIAssistantTab 
+                key="ai-assistant"
+                user={user}
+                profile={profile}
+                projects={projects}
+                skills={skills}
+                onDataUpdate={refreshData}
+              />
+            )}
+            {activeTab === 'preview' && (
+              <PreviewTab 
+                key="preview"
+                user={user}
+                profile={profile}
+                projects={projects}
+                skills={skills}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+    </BeamsBackground>
   );
 }
