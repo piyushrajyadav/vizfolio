@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
