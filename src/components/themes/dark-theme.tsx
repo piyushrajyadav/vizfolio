@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLinkIcon, GithubIcon, LinkedinIcon, TwitterIcon, MailIcon, CodeIcon } from "lucide-react";
+import { ExternalLinkIcon, GithubIcon, LinkedinIcon, TwitterIcon, CodeIcon, MailIcon } from 'lucide-react';
+import NextImage from 'next/image';
 
 interface Project {
   id: number;
@@ -58,9 +59,11 @@ export function DarkTheme({ profile, projects }: DarkThemeProps) {
                 className="relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-md opacity-50 animate-pulse" />
-                <img
+                <NextImage
                   src={profile.avatar}
                   alt={profile.name}
+                  width={160}
+                  height={160}
                   className="relative w-40 h-40 rounded-full object-cover border-4 border-gray-700"
                 />
               </motion.div>
@@ -217,10 +220,11 @@ export function DarkTheme({ profile, projects }: DarkThemeProps) {
                 >
                   <Card className="h-full bg-gray-800/50 border-gray-700 hover:border-purple-500/50 transition-all duration-300 backdrop-blur-sm">
                     <div className="aspect-video overflow-hidden rounded-t-lg relative">
-                      <img
+                      <NextImage
                         src={project.image}
                         alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>

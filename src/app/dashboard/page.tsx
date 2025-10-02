@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusIcon, FolderIcon, UserIcon, PaletteIcon, SettingsIcon, ExternalLinkIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import NextImage from "next/image";
 
 // Mock data - in real app this would come from Supabase
 const mockProjects = [
@@ -141,9 +142,11 @@ export default function Dashboard() {
                     className="border border-white/10 rounded-lg p-4 hover:border-white/20 transition-colors group"
                   >
                     <div className="flex gap-4">
-                      <img 
+                      <NextImage 
                         src={project.image} 
                         alt={project.title}
+                        width={80}
+                        height={80}
                         className="w-20 h-20 rounded-lg object-cover"
                       />
                       <div className="flex-1">
